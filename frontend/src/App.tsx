@@ -7,7 +7,6 @@ function App() {
   const [endTime, setEndTime] = useState('00:00:00')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [clipPath, setClipPath] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -116,11 +115,6 @@ function App() {
         </button>
         {error && (
           <div className="text-red-500 text-sm mt-2">{error}</div>
-        )}
-        {clipPath && (
-          <div className="text-green-500 text-sm mt-2">
-            Clip created successfully! Server path: {clipPath}
-          </div>
         )}
       </form>
     </div>
