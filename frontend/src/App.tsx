@@ -7,11 +7,13 @@ function App() {
   const [endTime, setEndTime] = useState('00:00:00')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [clipPath, setClipPath] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setClipPath('') // reset before each submit
 
     try {
       const clipResponse = await fetch('http://localhost:3000/api/clip', {
@@ -27,7 +29,6 @@ function App() {
       });
 
       if (!clipResponse.ok) {
-        // Try to parse error JSON, fallback to text
         let errorMsg = 'Failed to process video section';
         try {
           const errorData = await clipResponse.json();
@@ -38,18 +39,15 @@ function App() {
         throw new Error(errorMsg);
       }
 
-      // Get the blob and trigger download
-      const blob = await clipResponse.blob();
-      const urlObj = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = urlObj;
-      a.download = 'clip.mp4';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(urlObj);
-      // Optionally, show a success message
-      // setSuccess('Clip downloaded!');
+      // EXAMPLE: If your backend returns { clipPath: "/clips/clip123.mp4" }
+      const data = await clipResponse.json();
+      if (data.clipPath) {
+        setClipPath(data.clipPath);
+      }
+
+      // If you still want to download the file, you can fetch it here:
+      // const blob = await fetch(data.clipPath).then(res => res.blob());
+      // ... (download code)
 
     } catch (err) {
       console.error('Error in handleSubmit:', err);
@@ -63,49 +61,7 @@ function App() {
     <div className="container mx-auto p-4 max-w-md">
       <h1 className="text-2xl font-bold mb-4">YouTube Video Clipper</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="url" className="block text-sm font-medium mb-1">
-            YouTube URL
-          </label>
-          <input
-            type="text"
-            id="url"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="startTime" className="block text-sm font-medium mb-1">
-            Start Time (HH:MM:SS)
-          </label>
-          <input
-            type="text"
-            id="startTime"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-            pattern="[0-9]{2}:[0-9]{2}:[0-9]{2}"
-            placeholder="00:00:00"
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="endTime" className="block text-sm font-medium mb-1">
-            End Time (HH:MM:SS)
-          </label>
-          <input
-            type="text"
-            id="endTime"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-            pattern="[0-9]{2}:[0-9]{2}:[0-9]{2}"
-            placeholder="00:00:00"
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
+        {/* ...inputs... */}
         <button
           type="submit"
           disabled={loading}
@@ -115,6 +71,11 @@ function App() {
         </button>
         {error && (
           <div className="text-red-500 text-sm mt-2">{error}</div>
+        )}
+        {clipPath && (
+          <div className="text-green-500 text-sm mt-2">
+            Clip created successfully! Server path: {clipPath}
+          </div>
         )}
       </form>
     </div>
